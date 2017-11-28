@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">LAdapter_Library</string>
+    <string name="empty_text">我的胃空空如也！</string>
+    <string name="loading_text">此时的我没有底线……</string>
+    <string name="end_text">忽然出现的底线</string>
 </resources>

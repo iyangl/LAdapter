@@ -41,4 +41,16 @@ public class LBaseAdapter<K, VH extends RecyclerView.ViewHolder> extends Recycle
     protected void setDataList(List<K> dataList) {
         mData.addAll(dataList);
     }
+
+    protected boolean isEmpty() {
+        return mData != null && mData.size() == 0;
+    }
+
+    protected boolean isNotEmpty() {
+        return !isEmpty();
+    }
+
+    protected int getDataSize() {
+        return mData.size();
+    }
 }
