@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 import com.lewinlee.ladapter_library.base.LBaseAdapter;
 import com.lewinlee.ladapter_library.base.LViewHolder;
 
+import java.util.List;
+
 /**
  * @author: ly
  * @date : 2017/11/28
@@ -87,6 +89,10 @@ public abstract class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>> {
      */
     @LayoutRes
     private int mEndLayoutRes;
+    /**
+     * a state means whether is load data
+     */
+    private boolean isLoadingData;
 
     @Override
     public LViewHolder<K> onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -103,11 +109,13 @@ public abstract class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>> {
         return onHolderCreate(parent, viewType);
     }
 
-    abstract LViewHolder<K> onHolderCreate(ViewGroup parent, int viewType);
+    protected abstract LViewHolder<K> onHolderCreate(ViewGroup parent, int viewType);
+
+    protected abstract void onHolderBind(LViewHolder<K> holder, int position);
 
     @Override
     public void onBindViewHolder(LViewHolder<K> holder, int position) {
-        super.onBindViewHolder(holder, position);
+        onHolderBind(holder, position);
     }
 
     @Override
@@ -120,20 +128,20 @@ public abstract class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>> {
         if (isEnableLoadMoreView || isEnableEndView) {
             return getDataSize() + 1;
         }
-        return super.getItemCount();
+        return getDataSize();
     }
 
     @Override
     public int getItemViewType(int position) {
-        // no data and position is 1
-        if (position == 1 && isEmpty()) {
-            // enable empty view and reach the end
-            if (isEnableEmptyView && isEnding) {
-                return EMPTY_VIEW;
-            }
-            // has not reach the end and enable loading view
-            if (isEnableLoadingView) {
+        // no data and position is 0
+        if (position == 0 && isEmpty()) {
+            // now is loading and enable loading view
+            if (isEnableLoadingView && isLoadingData) {
                 return LOADING_VIEW;
+            }
+            // enable empty view and reach the end or is not load data
+            if (isEnableEmptyView && isEnding || !isLoadingData) {
+                return EMPTY_VIEW;
             }
         }
         if (position == getDataSize()) {
@@ -245,6 +253,14 @@ public abstract class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>> {
         return mEndView;
     }
 
+    public boolean isEnding() {
+        return isEnding;
+    }
+
+    public void setEnding(boolean ending) {
+        isEnding = ending;
+    }
+
     protected View getItemView(ViewGroup parent, @LayoutRes int layoutRes) {
         return LayoutInflater.from(parent.getContext()).inflate(layoutRes, parent, false);
     }
@@ -264,4 +280,22 @@ public abstract class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>> {
         }
     }
 
+
+    public void setNewData(List<K> dataList) {
+        super.setNewData(dataList);
+        isEnding = false;
+    }
+
+    public void addData(K data) {
+        super.addData(data);
+    }
+
+    public void addDataList(List<K> dataList) {
+        super.addDataList(dataList);
+        notifyDataSetChanged();
+    }
+
+    public K getData(int position) {
+        return super.getData(position);
+    }
 }

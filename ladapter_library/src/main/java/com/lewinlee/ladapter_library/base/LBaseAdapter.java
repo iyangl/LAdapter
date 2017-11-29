@@ -34,11 +34,11 @@ public class LBaseAdapter<K, VH extends RecyclerView.ViewHolder> extends Recycle
         mData = dataList;
     }
 
-    protected void setData(K data) {
+    protected void addData(K data) {
         mData.add(data);
     }
 
-    protected void setDataList(List<K> dataList) {
+    protected void addDataList(List<K> dataList) {
         mData.addAll(dataList);
     }
 
@@ -52,5 +52,9 @@ public class LBaseAdapter<K, VH extends RecyclerView.ViewHolder> extends Recycle
 
     protected int getDataSize() {
         return mData.size();
+    }
+
+    protected K getData(int position) {
+        return mData.get(position);
     }
 }
