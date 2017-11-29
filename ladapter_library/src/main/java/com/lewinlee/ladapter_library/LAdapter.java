@@ -1,6 +1,8 @@
 package com.lewinlee.ladapter_library;
 
 import android.support.annotation.LayoutRes;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +17,8 @@ import java.util.List;
  * @date : 2017/11/28
  * @desc :
  */
-public abstract class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>> {
+public abstract class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>>
+        implements View.OnClickListener {
 
     /**
      * whether enable empty view.
@@ -115,6 +118,7 @@ public abstract class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>> {
 
     @Override
     public void onBindViewHolder(LViewHolder<K> holder, int position) {
+        holder.itemView.setTag(position);
         onHolderBind(holder, position);
     }
 
@@ -297,5 +301,64 @@ public abstract class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>> {
 
     public K getData(int position) {
         return super.getData(position);
+    }
+
+    public void bindToRecyclerView(RecyclerView recyclerView) {
+        if (recyclerView == null) {
+            throw new RuntimeException("can not bind a RecyclerView's value is null ");
+        }
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            int currentState = 10010;
+
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                currentState = newState;
+            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                if (currentState == RecyclerView.SCROLL_STATE_IDLE) {
+                    RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
+                    if (layoutManager != null &&
+                            layoutManager instanceof LinearLayoutManager) {
+                        int itemPosition = ((LinearLayoutManager) layoutManager)
+                                .findLastCompletelyVisibleItemPosition();
+                        if (itemPosition == getItemCount() - 1) {
+                            // start pull up load more
+                            if (onLoadMoreListener != null) {
+                                onLoadMoreListener.onLoadMore();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    public static interface onLoadMoreListener {
+        void onLoadMore();
+    }
+
+    private onLoadMoreListener onLoadMoreListener;
+
+    public void setOnLoadMoreListener(LAdapter.onLoadMoreListener onLoadMoreListener) {
+        this.onLoadMoreListener = onLoadMoreListener;
+    }
+
+    public static interface onItemClickListener {
+        void onClick(int position);
+    }
+
+    private onItemClickListener onItemClickListener;
+
+    public void setOnItemClickListener(LAdapter.onItemClickListener onItemClickListener) {
+        this.onItemClickListener = onItemClickListener;
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (onItemClickListener != null) {
+            onItemClickListener.onClick((int) view.getTag());
+        }
     }
 }

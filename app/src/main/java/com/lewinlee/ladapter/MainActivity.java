@@ -9,9 +9,11 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
 import com.lewinlee.ladapter.adapter.TestAdapter;
+import com.lewinlee.ladapter_library.LAdapter;
 
 public class MainActivity extends AppCompatActivity {
 
+    int count = 0;
     private RecyclerView recycler;
     private TestAdapter adapter;
     private Handler mHandler = new Handler() {
@@ -30,19 +32,30 @@ public class MainActivity extends AppCompatActivity {
         adapter = new TestAdapter();
         recycler.setAdapter(adapter);
 
-        mockData();
+        adapter.bindToRecyclerView(recycler);
+        adapter.setOnLoadMoreListener(new LAdapter.onLoadMoreListener() {
+            @Override
+            public void onLoadMore() {
+                mHandler.sendEmptyMessageDelayed(1, 3000);
+                if (count == 5) {
+                    adapter.setEnding(true);
+                } else {
+                    count++;
+                }
+            }
+        });
     }
 
     private void mockData() {
         new Thread() {
             public void run() {
-                SystemClock.sleep(10000);
+                SystemClock.sleep(2000);
                 mHandler.sendEmptyMessage(1);
-                SystemClock.sleep(10000);
+                SystemClock.sleep(2000);
                 mHandler.sendEmptyMessage(1);
-                SystemClock.sleep(10000);
+                SystemClock.sleep(2000);
                 mHandler.sendEmptyMessage(1);
-                SystemClock.sleep(10000);
+                SystemClock.sleep(2000);
                 mHandler.sendEmptyMessage(1);
                 adapter.setEnding(true);
             }
