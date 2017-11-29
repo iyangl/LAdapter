@@ -13,7 +13,7 @@ import com.lewinlee.ladapter_library.base.LViewHolder;
  * @date : 2017/11/28
  * @desc :
  */
-public class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>> {
+public abstract class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>> {
 
     /**
      * whether enable empty view.
@@ -44,6 +44,11 @@ public class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>> {
      */
     private View mEmptyView;
     /**
+     * custom layout res of empty view.
+     */
+    @LayoutRes
+    private int mEmptyLayoutRes;
+    /**
      * viewType of load more view.
      */
     private static final int LOAD_MORE_VIEW = 0x222;
@@ -51,6 +56,11 @@ public class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>> {
      * instance of load more view.
      */
     private View mLoadMoreView;
+    /**
+     * custom layout res of load more view.
+     */
+    @LayoutRes
+    private int mLoadMoreLayoutRes;
     /**
      * viewType of full screen loading view.
      */
@@ -60,6 +70,11 @@ public class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>> {
      */
     private View mLoadingView;
     /**
+     * custom layout res of full screen loading view.
+     */
+    @LayoutRes
+    private int mLoadingLayoutRes;
+    /**
      * viewType of end view.
      */
     private static final int END_VIEW = 0x444;
@@ -67,24 +82,28 @@ public class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>> {
      * instance of end view.
      */
     private View mEndView;
+    /**
+     * custom layout res of end view.
+     */
+    @LayoutRes
+    private int mEndLayoutRes;
 
     @Override
     public LViewHolder<K> onCreateViewHolder(ViewGroup parent, int viewType) {
         switch (viewType) {
             case EMPTY_VIEW:
-                return new LViewHolder<>(getItemView(parent, R.layout.loading_view));
+                return new LViewHolder<>(createEmptyView(parent, viewType));
             case LOAD_MORE_VIEW:
-
-                break;
+                return new LViewHolder<>(createLoadMoreView(parent, viewType));
             case LOADING_VIEW:
-
-                break;
+                return new LViewHolder<>(createLoadingView(parent, viewType));
             case END_VIEW:
-
-                break;
+                return new LViewHolder<>(createEndView(parent, viewType));
         }
-        return super.onCreateViewHolder(parent, viewType);
+        return onHolderCreate(parent, viewType);
     }
+
+    abstract LViewHolder<K> onHolderCreate(ViewGroup parent, int viewType);
 
     @Override
     public void onBindViewHolder(LViewHolder<K> holder, int position) {
@@ -96,6 +115,10 @@ public class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>> {
         // has no data and enable one of two views
         if (isEmpty() && (isEnableEmptyView || isEnableLoadingView)) {
             return 1;
+        }
+        // enable load more view or end view, add bottom to RecyclerView
+        if (isEnableLoadMoreView || isEnableEndView) {
+            return getDataSize() + 1;
         }
         return super.getItemCount();
     }
@@ -126,8 +149,119 @@ public class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>> {
         return super.getItemViewType(position);
     }
 
+    /**
+     * @return custom empty view if existed, or default empty view
+     */
+    private View createEmptyView(ViewGroup parent, int viewType) {
+        return mEmptyView = mEmptyView == null ? getDefaultItemView(parent, viewType) : mEmptyView;
+    }
+
+    /**
+     * @return custom loading view if existed, or default loading view
+     */
+    private View createLoadingView(ViewGroup parent, int viewType) {
+        return mLoadingView = mLoadingView == null ? getDefaultItemView(parent, viewType) : mLoadingView;
+    }
+
+    /**
+     * @return custom load more view if existed, or default load more view
+     */
+    private View createLoadMoreView(ViewGroup parent, int viewType) {
+        return mLoadMoreView = mLoadMoreView == null ? getDefaultItemView(parent, viewType) : mLoadMoreView;
+    }
+
+    /**
+     * @return custom end view if existed, or default end view
+     */
+    private View createEndView(ViewGroup parent, int viewType) {
+        return mEndView = mEndView == null ? getDefaultItemView(parent, viewType) : mEndView;
+    }
+
+    @LayoutRes
+    public int getEmptyLayoutRes() {
+        return mEmptyLayoutRes == 0 ? R.layout.empty_view : mEmptyLayoutRes;
+    }
+
+    @LayoutRes
+    public int getLoadingLayoutRes() {
+        return mLoadingLayoutRes == 0 ? R.layout.loading_view : mLoadingLayoutRes;
+    }
+
+    @LayoutRes
+    public int getLoadMoreLayoutRes() {
+        return mLoadMoreLayoutRes == 0 ? R.layout.load_more_view : mLoadMoreLayoutRes;
+    }
+
+    @LayoutRes
+    public int getEndLayoutRes() {
+        return mEndLayoutRes == 0 ? R.layout.end_view : mEndLayoutRes;
+    }
+
+    public void setEmptyView(View mEmptyView) {
+        this.mEmptyView = mEmptyView;
+    }
+
+    public void setEmptyLayoutRes(int mEmptyLayoutRes) {
+        this.mEmptyLayoutRes = mEmptyLayoutRes;
+    }
+
+    public void setLoadMoreView(View mLoadMoreView) {
+        this.mLoadMoreView = mLoadMoreView;
+    }
+
+    public void setLoadMoreLayoutRes(int mLoadMoreLayoutRes) {
+        this.mLoadMoreLayoutRes = mLoadMoreLayoutRes;
+    }
+
+    public void setmEndView(View mEndView) {
+        this.mEndView = mEndView;
+    }
+
+    public void setLoadingLayoutRes(int mLoadingLayoutRes) {
+        this.mLoadingLayoutRes = mLoadingLayoutRes;
+    }
+
+    public void setLoadingView(View mLoadingView) {
+        this.mLoadingView = mLoadingView;
+    }
+
+    public void setEndLayoutRes(int mEndLayoutRes) {
+        this.mEndLayoutRes = mEndLayoutRes;
+    }
+
+    public View getEmptyView() {
+        return mEmptyView;
+    }
+
+    public View getLoadMoreView() {
+        return mLoadMoreView;
+    }
+
+    public View getLoadingView() {
+        return mLoadingView;
+    }
+
+    public View getEndView() {
+        return mEndView;
+    }
+
     protected View getItemView(ViewGroup parent, @LayoutRes int layoutRes) {
         return LayoutInflater.from(parent.getContext()).inflate(layoutRes, parent, false);
+    }
+
+    private View getDefaultItemView(ViewGroup parent, int viewType) {
+        switch (viewType) {
+            case EMPTY_VIEW:
+                return getItemView(parent, getEmptyLayoutRes());
+            case LOADING_VIEW:
+                return getItemView(parent, getLoadingLayoutRes());
+            case LOAD_MORE_VIEW:
+                return getItemView(parent, getLoadMoreLayoutRes());
+            case END_VIEW:
+                return getItemView(parent, getEndLayoutRes());
+            default:
+                return null;
+        }
     }
 
 }
