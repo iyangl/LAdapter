@@ -8,10 +8,14 @@ import java.util.List;
 
 public class LBaseAdapter<K, VH extends RecyclerView.ViewHolder> extends RecyclerView.Adapter<VH> {
 
-    private List<K> mData;
+    protected List<K> mData;
 
-    public LBaseAdapter() {
-        mData = new ArrayList<>();
+    protected LBaseAdapter() {
+        this(null);
+    }
+
+    protected LBaseAdapter(List<K> list) {
+        mData = list == null ? new ArrayList<K>() : list;
     }
 
     @Override
@@ -26,35 +30,7 @@ public class LBaseAdapter<K, VH extends RecyclerView.ViewHolder> extends Recycle
 
     @Override
     public int getItemCount() {
-        return 0;
-    }
-
-    protected void setNewData(List<K> dataList) {
-        mData.clear();
-        mData = dataList;
-    }
-
-    protected void addData(K data) {
-        mData.add(data);
-    }
-
-    protected void addDataList(List<K> dataList) {
-        mData.addAll(dataList);
-    }
-
-    protected boolean isEmpty() {
-        return mData != null && mData.size() == 0;
-    }
-
-    protected boolean isNotEmpty() {
-        return !isEmpty();
-    }
-
-    protected int getDataSize() {
         return mData.size();
     }
 
-    protected K getData(int position) {
-        return mData.get(position);
-    }
 }

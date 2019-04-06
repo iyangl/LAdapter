@@ -6,7 +6,7 @@ import android.widget.TextView;
 
 import com.lewinlee.ladapter.R;
 import com.lewinlee.ladapter_library.LAdapter;
-import com.lewinlee.ladapter_library.base.LViewHolder;
+import com.lewinlee.ladapter_library.holder.LViewHolder;
 
 /**
  * @author: ly

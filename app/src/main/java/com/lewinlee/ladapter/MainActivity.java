@@ -1,27 +1,25 @@
 package com.lewinlee.ladapter;
 
-import android.os.Handler;
-import android.os.Message;
-import android.os.SystemClock;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
 import com.lewinlee.ladapter.adapter.TestAdapter;
+import com.lewinlee.ladapter.api.ServiceGenerator;
+import com.lewinlee.ladapter.api.TestService;
+import com.lewinlee.ladapter.util.BaseSubscriber;
+import com.lewinlee.ladapter.util.RxUtil;
 import com.lewinlee.ladapter_library.LAdapter;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    int count = 0;
     private RecyclerView recycler;
     private TestAdapter adapter;
-    private Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            addData();
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,40 +30,34 @@ public class MainActivity extends AppCompatActivity {
         adapter = new TestAdapter();
         recycler.setAdapter(adapter);
 
+        adapter.setNewData(Arrays.asList("1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1"));
+
         adapter.bindToRecyclerView(recycler);
         adapter.setOnLoadMoreListener(new LAdapter.onLoadMoreListener() {
             @Override
             public void onLoadMore() {
-                mHandler.sendEmptyMessageDelayed(1, 3000);
-                if (count == 5) {
-                    adapter.setEnding(true);
-                } else {
-                    count++;
-                }
+                new Handler(getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        adapter.addDataList(Arrays.asList("1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1", "1"));
+                    }
+                }, 2000);
             }
         });
+
+        TestService service = ServiceGenerator.getService(TestService.class);
+        service.live().compose(RxUtil.<List<String>>rxSchedulerHelper())
+                .subscribe(new BaseSubscriber<List<String>>() {
+                    @Override
+                    public void onNext(List<String> strings) {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+
+                    }
+                });
     }
 
-    private void mockData() {
-        new Thread() {
-            public void run() {
-                SystemClock.sleep(2000);
-                mHandler.sendEmptyMessage(1);
-                SystemClock.sleep(2000);
-                mHandler.sendEmptyMessage(1);
-                SystemClock.sleep(2000);
-                mHandler.sendEmptyMessage(1);
-                SystemClock.sleep(2000);
-                mHandler.sendEmptyMessage(1);
-                adapter.setEnding(true);
-            }
-        }.start();
-    }
-
-    private void addData() {
-        for (int i = 0; i < 10; i++) {
-            adapter.addData(String.valueOf(i));
-        }
-        adapter.notifyDataSetChanged();
-    }
 }

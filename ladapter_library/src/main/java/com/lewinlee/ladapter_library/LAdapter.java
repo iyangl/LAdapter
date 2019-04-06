@@ -8,8 +8,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.lewinlee.ladapter_library.base.LBaseAdapter;
-import com.lewinlee.ladapter_library.base.LViewHolder;
+import com.lewinlee.ladapter_library.holder.LViewHolder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -17,8 +18,7 @@ import java.util.List;
  * @date : 2017/11/28
  * @desc :
  */
-public abstract class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>>
-        implements View.OnClickListener {
+public abstract class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>> implements View.OnClickListener {
 
     /**
      * whether enable empty view.
@@ -93,7 +93,7 @@ public abstract class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>>
     @LayoutRes
     private int mEndLayoutRes;
     /**
-     * a state means whether is load data
+     * a state means whether is loading data
      */
     private boolean isLoadingData;
 
@@ -101,13 +101,13 @@ public abstract class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>>
     public LViewHolder<K> onCreateViewHolder(ViewGroup parent, int viewType) {
         switch (viewType) {
             case EMPTY_VIEW:
-                return new LViewHolder<>(createEmptyView(parent, viewType));
+                return new LViewHolder<>(createEmptyView(parent, viewType), this);
             case LOAD_MORE_VIEW:
-                return new LViewHolder<>(createLoadMoreView(parent, viewType));
+                return new LViewHolder<>(createLoadMoreView(parent, viewType), this);
             case LOADING_VIEW:
-                return new LViewHolder<>(createLoadingView(parent, viewType));
+                return new LViewHolder<>(createLoadingView(parent, viewType), this);
             case END_VIEW:
-                return new LViewHolder<>(createEndView(parent, viewType));
+                return new LViewHolder<>(createEndView(parent, viewType), this);
         }
         return onHolderCreate(parent, viewType);
     }
@@ -284,56 +284,85 @@ public abstract class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>>
         }
     }
 
-
-    public void setNewData(List<K> dataList) {
-        super.setNewData(dataList);
-        isEnding = false;
-    }
-
-    public void addData(K data) {
-        super.addData(data);
-    }
-
-    public void addDataList(List<K> dataList) {
-        super.addDataList(dataList);
-        notifyDataSetChanged();
-    }
-
-    public K getData(int position) {
-        return super.getData(position);
-    }
+    //-----------------------------view-------------------------------
 
     public void bindToRecyclerView(RecyclerView recyclerView) {
         if (recyclerView == null) {
             throw new RuntimeException("can not bind a RecyclerView's value is null ");
         }
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            int currentState = 10010;
+            RecyclerView.LayoutManager layoutManager;
+            boolean isBottom;
 
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                currentState = newState;
+                if (isBottom && newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    if (!isEnding && !isLoadingData && onLoadMoreListener != null) {
+                        isLoadingData = true;
+                        onLoadMoreListener.onLoadMore();
+                    }
+                }
             }
 
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                if (currentState == RecyclerView.SCROLL_STATE_IDLE) {
-                    RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
-                    if (layoutManager != null &&
-                            layoutManager instanceof LinearLayoutManager) {
-                        int itemPosition = ((LinearLayoutManager) layoutManager)
-                                .findLastCompletelyVisibleItemPosition();
-                        if (itemPosition == getItemCount() - 1) {
-                            // start pull up load more
-                            if (onLoadMoreListener != null) {
-                                onLoadMoreListener.onLoadMore();
-                            }
-                        }
-                    }
+                if (layoutManager == null) {
+                    layoutManager = recyclerView.getLayoutManager();
+                }
+                if (layoutManager instanceof LinearLayoutManager) {
+                    int itemPosition = ((LinearLayoutManager) layoutManager)
+                            .findLastCompletelyVisibleItemPosition();
+                    isBottom = itemPosition == getItemCount() - 1;
                 }
             }
         });
     }
+
+    private void onNotifyDataSetChanged() {
+        isLoadingData = false;
+        notifyDataSetChanged();
+    }
+
+    //---------------------------data-------------------------------
+
+    public void setNewData(List<K> dataList) {
+        if (dataList == null) {
+            dataList = new ArrayList<>();
+        }
+        mData.clear();
+        addDataList(dataList);
+    }
+
+    public void addData(K data) {
+        mData.add(data);
+        onNotifyDataSetChanged();
+    }
+
+    public void addDataList(List<K> dataList) {
+        if (dataList == null) {
+            dataList = new ArrayList<>();
+        }
+        mData.addAll(new ArrayList<>(dataList));
+        onNotifyDataSetChanged();
+    }
+
+    public boolean isEmpty() {
+        return mData != null && mData.size() == 0;
+    }
+
+    public boolean isNotEmpty() {
+        return !isEmpty();
+    }
+
+    public int getDataSize() {
+        return mData.size();
+    }
+
+    public K getData(int position) {
+        return mData.get(position);
+    }
+
+    //---------------------------listener---------------------------
 
     public static interface onLoadMoreListener {
         void onLoadMore();
@@ -357,7 +386,11 @@ public abstract class LAdapter<K> extends LBaseAdapter<K, LViewHolder<K>>
 
     @Override
     public void onClick(View view) {
-        if (onItemClickListener != null) {
+        if (view == mLoadingView) {
+            if (!isLoadingData && onLoadMoreListener != null) {
+                onLoadMoreListener.onLoadMore();
+            }
+        } else if (onItemClickListener != null) {
             onItemClickListener.onClick((int) view.getTag());
         }
     }

@@ -3,7 +3,13 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:gravity="center"
-              android:orientation="vertical">
+              android:orientation="horizontal">
+
+    <ProgressBar
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginEnd="4dp"
+        android:layout_marginRight="4dp"/>
 
     <TextView
         android:layout_width="wrap_content"

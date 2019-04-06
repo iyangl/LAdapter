@@ -1,9 +1,7 @@
-package com.lewinlee.ladapter_library.base;
+package com.lewinlee.ladapter_library.holder;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
-
-import com.lewinlee.ladapter_library.LAdapter;
 
 /**
  * @author: ly
@@ -11,7 +9,6 @@ import com.lewinlee.ladapter_library.LAdapter;
  * @desc :
  */
 public class LViewHolder<K> extends RecyclerView.ViewHolder {
-    private LAdapter adapter;
 
     public LViewHolder(View itemView) {
         super(itemView);
@@ -21,10 +18,9 @@ public class LViewHolder<K> extends RecyclerView.ViewHolder {
     /**
      * add {@link com.lewinlee.ladapter_library.LAdapter.onItemClickListener} to view
      */
-    public LViewHolder(View itemView, LAdapter adapter) {
+    public LViewHolder(View itemView, View.OnClickListener listener) {
         super(itemView);
-        this.adapter = adapter;
-        itemView.setOnClickListener(adapter);
+        itemView.setOnClickListener(listener);
     }
 
     public void bind(K data) {
